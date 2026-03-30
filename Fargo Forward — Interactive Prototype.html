@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fargo Forward — Wells Fargo AI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+:root {
+  --wf-red: #CD1309;
+  --wf-red-dark: #A00F07;
+  --wf-red-glow: rgba(205, 19, 9, 0.15);
+  --wf-gold: #FFCD41;
+  --wf-gold-dim: #D4A830;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Dark mode tokens */
+  --bg-primary: #0D0D0F;
+  --bg-secondary: #141418;
+  --bg-card: #1A1A20;
+  --bg-card-hover: #1F1F26;
+  --bg-elevated: #22222A;
+  --bg-input: #16161C;
+  --border-primary: #2A2A34;
+  --border-subtle: #1F1F28;
+  --text-primary: #F2F2F4;
+  --text-secondary: #A0A0AC;
+  --text-tertiary: #6B6B78;
+  --text-inverse: #0D0D0F;
+
+  /* Semantic */
+  --color-success: #22C55E;
+  --color-success-dim: rgba(34, 197, 94, 0.12);
+  --color-warning: #F59E0B;
+  --color-warning-dim: rgba(245, 158, 11, 0.12);
+  --color-danger: #EF4444;
+  --color-danger-dim: rgba(239, 68, 68, 0.12);
+  --color-info: #3B82F6;
+  --color-info-dim: rgba(59, 130, 246, 0.12);
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-normal: 250ms var(--ease-out);
+  --transition-slow: 400ms var(--ease-out);
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  overflow-x: hidden;
+}
+
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+table { border-collapse: collapse; width: 100%; }
+
+/* ========== LAYOUT ========== */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* ========== HEADER ========== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-8);
+  height: 60px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.logo-text .brand {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.logo-text .sub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 12px;
+  background: var(--wf-red-glow);
+  border: 1px solid rgba(205, 19, 9, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--wf-red);
+  letter-spacing: 0.02em;
+}
+
+.header-badge .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--wf-red);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.header-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ========== TABS ========== */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-8);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.tab-btn {
+  position: relative;
+  padding: var(--space-3) var(--space-5);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-secondary);
+}
+
+.tab-btn.active {
+  color: var(--text-primary);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--space-5);
+  right: var(--space-5);
+  height: 2px;
+  background: var(--wf-red);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+/* ========== MAIN CONTENT ========== */
+.main-content {
+  flex: 1;
+  padding: var(--space-6) var(--space-8);
+  overflow-y: auto;
+}
+
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.3s var(--ease-out);
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== BOTTOM BANNER ========== */
+.bottom-banner {
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(135deg, rgba(205, 19, 9, 0.08), rgba(205, 19, 9, 0.03));
+  border: 1px solid rgba(205, 19, 9, 0.15);
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-6);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.bottom-banner .banner-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--wf-red);
+  margin-top: 1px;
+}
+
+.bottom-banner .banner-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.bottom-banner .banner-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ========== CARDS & PANELS ========== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: border-color var(--transition-fast);
+}
+
+.card:hover {
+  border-color: #35354040;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.card-subtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ========== KPI METRICS BAR ========== */
+.kpi-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.kpi-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.kpi-item .kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-item .kpi-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.kpi-item .kpi-trend {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kpi-trend.up { color: var(--color-success); }
+.kpi-trend.down { color: var(--color-danger); }
+.kpi-trend.neutral { color: var(--text-tertiary); }
+
+/* ========== TAB 1: FRAUD SHIELD ========== */
+.fraud-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-6);
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Phone mockup */
+.phone-frame {
+  width: 340px;
+  margin: 0 auto;
+  background: #111115;
+  border-radius: 40px;
+  border: 3px solid #2A2A34;
+  padding: 12px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.phone-screen {
+  background: var(--bg-primary);
+  border-radius: 30px;
+  overflow: hidden;
+  min-height: 580px;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.phone-status-bar .time { font-variant-numeric: tabular-nums; }
+.phone-status-icons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.phone-app-header {
+  padding: 8px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.phone-app-header .app-logo {
+  width: 28px;
+  height: 28px;
+  background: var(--wf-red);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-app-header .app-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.phone-app-header .app-name span {
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+/* Chat interface */
+.chat-container {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  animation: msgIn 0.35s var(--ease-out) both;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--wf-red);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg.system {
+  align-self: flex-start;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-bottom-left-radius: 4px;
+  color: var(--text-primary);
+}
+
+.chat-msg.alert {
+  align-self: flex-start;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-bottom-left-radius: 4px;
+  color: var(--text-primary);
+  max-width: 90%;
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--color-warning);
+  font-size: 12px;
+}
+
+.risk-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.risk-factor {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.risk-factor .rf-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.risk-factor .rf-icon.high { background: var(--color-danger-dim); color: var(--color-danger); }
+.risk-factor .rf-icon.med { background: var(--color-warning-dim); color: var(--color-warning); }
+
+.risk-score-bar {
+  margin: 8px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.risk-score-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.risk-score-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-warning), var(--color-danger));
+  transition: width 1s var(--ease-out);
+}
+
+.risk-score-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+.chat-actions button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.chat-actions button:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.chat-actions button.primary {
+  background: var(--color-danger-dim);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+.chat-actions button.primary:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.chat-actions button.safe {
+  background: var(--color-success-dim);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: var(--color-success);
+}
+
+/* Fraud sidebar metrics */
+.fraud-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.fraud-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.fraud-metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fraud-metric-icon.scan { background: var(--color-info-dim); color: var(--color-info); }
+.fraud-metric-icon.intercept { background: var(--color-danger-dim); color: var(--color-danger); }
+.fraud-metric-icon.fp { background: var(--color-success-dim); color: var(--color-success); }
+.fraud-metric-icon.speed { background: var(--color-warning-dim); color: var(--color-warning); }
+
+.fraud-metric-data {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fraud-metric-data .fm-value {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fraud-metric-data .fm-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.fraud-sidebar-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Animated counter */
+.counter-animate {
+  display: inline-block;
+}
+
+/* ========== TAB 2: BRANCH HEALTH ========== */
+.branch-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.branch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+/* Region Map Grid */
+.region-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.region-cell {
+  aspect-ratio: 1.3;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: default;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.region-cell:hover {
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.region-cell .region-name {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.region-cell .region-score {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.region-cell.green {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.15);
+  color: var(--color-success);
+}
+
+.region-cell.yellow {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: var(--color-warning);
+}
+
+.region-cell.red {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 0.45); }
+}
+
+/* Branch Table */
+.branch-table-wrap {
+  overflow-x: auto;
+}
+
+.branch-table {
+  font-size: 12px;
+}
+
+.branch-table thead th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  white-space: nowrap;
+}
+
+.branch-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.branch-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.branch-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+.branch-table .branch-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.health-badge.good { background: var(--color-success-dim); color: var(--color-success); }
+.health-badge.warning { background: var(--color-warning-dim); color: var(--color-warning); }
+.health-badge.danger { background: var(--color-danger-dim); color: var(--color-danger); }
+
+.flag-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.flag-dot.green { background: var(--color-success); }
+.flag-dot.yellow { background: var(--color-warning); }
+.flag-dot.red { background: var(--color-danger); }
+
+.anomaly-note {
+  font-size: 11px;
+  color: var(--color-warning);
+  font-style: italic;
+  max-width: 260px;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Chart containers */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 240px;
+}
+
+/* ========== TAB 3: TRUST DASHBOARD ========== */
+.trust-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.trust-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-10);
+  padding: var(--space-8) var(--space-6);
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+}
+
+.trust-score-ring {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.trust-score-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.trust-score-ring .ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.06);
+  stroke-width: 8;
+}
+
+.trust-score-ring .ring-fill {
+  fill: none;
+  stroke: var(--wf-red);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 408.4;
+  stroke-dashoffset: 110;
+  transition: stroke-dashoffset 1.5s var(--ease-out);
+}
+
+.trust-score-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.trust-score-value .number {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.trust-score-value .suffix {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.trust-score-value .label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.trust-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 380px;
+}
+
+.trust-hero-info h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.trust-hero-info p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.trust-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--color-success-dim);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success);
+  width: fit-content;
+}
+
+.trust-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.trust-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.trust-metric-card .tm-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.trust-metric-card .tm-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.trust-metric-card .tm-change {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trust-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+.trust-chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* Live Feed */
+.live-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  animation: feedIn 0.4s var(--ease-out) both;
+}
+
+@keyframes feedIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.feed-item .feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+
+.feed-item .feed-text {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.feed-item .feed-text strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.feed-item .feed-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Live indicator */
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.live-indicator .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Section titles */
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-4);
+}
+
+/* Utility */
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }
+.text-info { color: var(--color-info); }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+  .fraud-layout {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+  .branch-grid {
+    grid-template-columns: 1fr;
+  }
+  .trust-charts {
+    grid-template-columns: 1fr;
+  }
+  .trust-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kpi-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="logo-group">
+      <div class="logo-mark">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#CD1309"/>
+          <path d="M8 22 L12 14 L16 18 L18 12 L20 18 L24 14 L28 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="18" cy="24" r="2" fill="#FFCD41"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="brand">Fargo Forward</span>
+        <span class="sub">AI Platform Prototype</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-badge">
+        <span class="pulse"></span>
+        LIVE DEMO
+      </div>
+      <span class="header-label">Wells Fargo GCA Pitch — 2026</span>
+    </div>
+  </header>
+
+  <!-- ===== TAB BAR ===== -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="fraud">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L2 4v4c0 4 2.5 6 6 7 3.5-1 6-3 6-7V4L8 1z"/><path d="M6 8l1.5 1.5L10.5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Fraud Shield
+    </button>
+    <button class="tab-btn" data-tab="branch">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M1 6h14M5 6v7M11 6v7"/></svg>
+      Branch Health Monitor
+    </button>
+    <button class="tab-btn" data-tab="trust">
+      <svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14" stroke-linecap="round"/><circle cx="8" cy="8" r="6.5"/></svg>
+      Trust Dashboard
+    </button>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main-content">
+
+    <!-- ===== TAB 1: FRAUD SHIELD ===== -->
+    <section class="tab-panel active" id="panel-fraud">
+      <div class="fraud-layout">
+        <div>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <!-- Status bar -->
+              <div class="phone-status-bar">
+                <span class="time">3:42 PM</span>
+                <div class="phone-status-icons">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.24 4.24 0 00-6 0zm-4-4l2 2a7.07 7.07 0 0110 0l2-2c-3.87-3.87-10.13-3.87-14 0z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+              <!-- App header -->
+              <div class="phone-app-header">
+                <div class="app-logo">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M3 10l3-5 2 2.5L10 5l3 5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="app-name">Fargo <span>AI Assistant</span></div>
+              </div>
+              <!-- Chat -->
+              <div class="chat-container" id="chat-container">
+                <!-- Messages will be injected by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar metrics -->
+        <div class="fraud-sidebar">
+          <div class="fraud-sidebar-title">Real-Time Detection Metrics</div>
+
+          <div class="fraud-metric-card">
+            <div class="fraud-metric-icon scan">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div class="fraud-metric-data">
+              <span class="fm-value" data-counter="847291">0</span>
+              <span class="fm-label">Transactions scanned today</span>
+            </div>
+          </div>
+
+          <div class="fraud-metric-card">
+            <div class="fraud-metric-icon intercept">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="fraud-metric-data">
+              <span class="fm-value">$1.2M</span>
+              <span class="fm-label">Fraud intercepted today</span>
+            </div>
+          </div>
+
+          <div class="fraud-metric-card">
+            <div class="fraud-metric-icon fp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            </div>
+            <div class="fraud-metric-data">
+              <span class="fm-value">0.3%</span>
+              <span class="fm-label">False positive rate</span>
+            </div>
+          </div>
+
+          <div class="fraud-metric-card">
+            <div class="fraud-metric-icon speed">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="fraud-metric-data">
+              <span class="fm-value">0.8s</span>
+              <span class="fm-label">Avg detection time</span>
+            </div>
+          </div>
+
+          <div style="margin-top: auto; padding-top: var(--space-4);">
+            <div class="card" style="padding: var(--space-3) var(--space-4);">
+              <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; font-weight: 500;">Detection Model</div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-success);"></div>
+                <span style="font-size: 12px; font-weight: 600;">Fargo Sentinel v3.2</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Trained on 2.1B transactions • Updated 2h ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Banner -->
+      <div class="bottom-banner" style="max-width: 1100px; margin: var(--space-6) auto 0;">
+        <svg class="banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div class="banner-text">
+          <strong>This interaction currently doesn't exist.</strong> Fargo handles 1B+ interactions for cost reduction — zero for fraud prevention. Every day, Wells Fargo customers lose money to scams that AI could catch in real-time.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB 2: BRANCH HEALTH ===== -->
+    <section class="tab-panel" id="panel-branch">
+      <div class="branch-layout">
+
+        <!-- KPI Bar -->
+        <div class="kpi-bar">
+          <div class="kpi-item">
+            <span class="kpi-label">Branches Monitored</span>
+            <span class="kpi-value">4,090</span>
+            <span class="kpi-trend neutral">All U.S. locations</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">Flagged This Month</span>
+            <span class="kpi-value" style="color: var(--color-warning);">12</span>
+            <span class="kpi-trend down">↓ 3 from last month</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">Resolved ≤30 Days</span>
+            <span class="kpi-value" style="color: var(--color-success);">97%</span>
+            <span class="kpi-trend up">↑ 4% improvement</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-label">Escalated to Compliance</span>
+            <span class="kpi-value" style="color: var(--color-success);">0</span>
+            <span class="kpi-trend up">Zero escalations — 6 months running</span>
+          </div>
+        </div>
+
+        <div class="branch-grid">
+          <!-- Region Map -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Regional Health Overview</span>
+              <span class="card-subtitle">Color = composite health score</span>
+            </div>
+            <div class="region-grid" id="region-grid">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+
+          <!-- Trend Chart -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Flagged Branch Recovery Trend</span>
+              <span class="card-subtitle">After early AI intervention</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="branchTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branch Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Branch Detail — Flagged & Monitored</span>
+            <div class="live-indicator">
+              <span class="dot"></span>
+              Updated 4 min ago
+            </div>
+          </div>
+          <div class="branch-table-wrap">
+            <table class="branch-table">
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  <th>City</th>
+                  <th>Health Score</th>
+                  <th>Sales Pressure</th>
+                  <th>Cross-Sell Ratio</th>
+                  <th>Employee Sentiment</th>
+                  <th>Status</th>
+                  <th>Anomaly Note</th>
+                </tr>
+              </thead>
+              <tbody id="branch-table-body">
+                <!-- Filled by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bottom Banner -->
+        <div class="bottom-banner">
+          <svg class="banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div class="banner-text">
+            <strong>This system currently doesn't exist.</strong> The CWA reports 84% of branch workers are worried about sales pressure — the same pattern that preceded the 2016 scandal. AI-driven monitoring could catch these signals before they escalate.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB 3: TRUST DASHBOARD ===== -->
+    <section class="tab-panel" id="panel-trust">
+      <div class="trust-layout">
+
+        <!-- Hero Score -->
+        <div class="trust-hero">
+          <div class="trust-score-ring">
+            <svg viewBox="0 0 160 160">
+              <circle class="ring-bg" cx="80" cy="80" r="65"/>
+              <circle class="ring-fill" cx="80" cy="80" r="65"/>
+            </svg>
+            <div class="trust-score-value">
+              <div><span class="number">73</span><span class="suffix">/100</span></div>
+              <span class="label">Trust Index</span>
+            </div>
+          </div>
+          <div class="trust-hero-info">
+            <h2>Wells Fargo Trust Index</h2>
+            <p>A composite score aggregating customer satisfaction (CSAT), complaint resolution metrics, regulatory standing, and public sentiment analysis — updated daily.</p>
+            <div class="trust-trend-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              +8 pts Year-over-Year
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="trust-metrics">
+          <div class="trust-metric-card">
+            <span class="tm-label">Complaint Resolution Rate</span>
+            <span class="tm-value">94.2%</span>
+            <span class="tm-change text-success">↑ 8% YTD</span>
+          </div>
+          <div class="trust-metric-card">
+            <span class="tm-label">Avg Resolution Time</span>
+            <span class="tm-value">2.1d</span>
+            <span class="tm-change text-success">↓ from 4.3 days</span>
+          </div>
+          <div class="trust-metric-card">
+            <span class="tm-label">Fraud Detection Rate</span>
+            <span class="tm-value">99.7%</span>
+            <span class="tm-change text-success">↑ 0.4% improvement</span>
+          </div>
+          <div class="trust-metric-card">
+            <span class="tm-label">Fargo AI Interactions</span>
+            <span class="tm-value">1.02B</span>
+            <span class="tm-change" style="color: var(--text-tertiary);">Cumulative to date</span>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="trust-charts">
+          <div class="trust-chart-card">
+            <div class="card-header">
+              <span class="card-title">Customer Satisfaction Trend</span>
+              <span class="card-subtitle">12-month rolling</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="satisfactionChart"></canvas>
+            </div>
+          </div>
+          <div class="trust-chart-card">
+            <div class="card-header">
+              <span class="card-title">J.D. Power Score — WF vs Industry</span>
+              <span class="card-subtitle">Gap narrowing over time</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="jdPowerChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Resolved Complaints — Live Feed</span>
+            <div class="live-indicator">
+              <span class="dot"></span>
+              Live
+            </div>
+          </div>
+          <div class="live-feed" id="live-feed">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- Bottom Banner -->
+        <div class="bottom-banner">
+          <svg class="banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div class="banner-text">
+            <strong>No major U.S. bank publishes this data.</strong> Wells Fargo could be the first — turning transparency into a competitive moat. When trust is your biggest liability, radical openness becomes your greatest asset.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ========== TAB SWITCHING ==========
+const tabBtns = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.tab-panel');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+
+    // Initialize charts when tab becomes visible
+    if (tab === 'branch') initBranchCharts();
+    if (tab === 'trust') initTrustCharts();
+  });
+});
+
+// ========== TAB 1: FRAUD SHIELD CHAT ANIMATION ==========
+const chatContainer = document.getElementById('chat-container');
+
+const chatMessages = [
+  { type: 'user', text: 'Send $2,400 to Marcus Johnson via Zelle', delay: 500 },
+  { type: 'system', text: 'Processing your Zelle transfer of <strong>$2,400.00</strong> to <strong>Marcus Johnson</strong>...', delay: 1200 },
+  { type: 'alert', delay: 2200, html: `
+    <div class="alert-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      Fargo AI — Transaction Hold
+    </div>
+    <div style="font-size: 13px; margin-bottom: 8px;">
+      <strong>Hold on — this doesn't look like your typical transaction.</strong> Here's what I noticed:
+    </div>
+    <div class="risk-factors">
+      <div class="risk-factor">
+        <span class="rf-icon high">!</span>
+        <div><strong style="color: var(--color-danger);">Unusual amount</strong> — $2,400 is 4.8× your average Zelle transfer of $497</div>
+      </div>
+      <div class="risk-factor">
+        <span class="rf-icon high">!</span>
+        <div><strong style="color: var(--color-danger);">New recipient</strong> — You've never sent money to Marcus Johnson before</div>
+      </div>
+      <div class="risk-factor">
+        <span class="rf-icon med">⚠</span>
+        <div><strong style="color: var(--color-warning);">Location mismatch</strong> — You're in Dallas, TX but usually transact from Houston, TX</div>
+      </div>
+    </div>
+    <div class="risk-score-bar">
+      <span style="font-size: 11px; color: var(--text-tertiary);">Risk Score</span>
+      <div class="risk-score-track">
+        <div class="risk-score-fill" style="width: 0%;" id="risk-fill"></div>
+      </div>
+      <span class="risk-score-label" id="risk-label">0%</span>
+    </div>
+  `},
+  { type: 'actions', delay: 3400 }
+];
+
+function animateChat() {
+  chatMessages.forEach((msg, i) => {
+    setTimeout(() => {
+      if (msg.type === 'actions') {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'chat-actions';
+        actionsDiv.innerHTML = `
+          <button class="safe" onclick="this.style.background='rgba(34,197,94,0.25)'; this.textContent='✓ Cancelled'">Cancel</button>
+          <button onclick="this.style.opacity='0.5'">Send Anyway</button>
+          <button class="primary" onclick="this.style.background='rgba(239,68,68,0.25)'; this.textContent='✓ Reported'">Report Fraud</button>
+        `;
+        actionsDiv.style.animation = 'msgIn 0.35s var(--ease-out) both';
+        chatContainer.appendChild(actionsDiv);
+      } else {
+        const div = document.createElement('div');
+        div.className = 'chat-msg ' + msg.type;
+        div.innerHTML = msg.html || msg.text;
+        chatContainer.appendChild(div);
+
+        // Animate risk score bar
+        if (msg.type === 'alert') {
+          setTimeout(() => {
+            const fill = document.getElementById('risk-fill');
+            const label = document.getElementById('risk-label');
+            if (fill) fill.style.width = '78%';
+            if (label) label.textContent = '78%';
+          }, 600);
+        }
+      }
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }, msg.delay);
+  });
+}
+
+// Run chat animation on load
+animateChat();
+
+// Counter animation for sidebar metric
+function animateCounter(el, target) {
+  const duration = 1500;
+  const start = performance.now();
+  function update(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(eased * target);
+    el.textContent = current.toLocaleString();
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+document.querySelectorAll('[data-counter]').forEach(el => {
+  animateCounter(el, parseInt(el.dataset.counter));
+});
+
+// ========== TAB 2: BRANCH HEALTH ==========
+const regions = [
+  { name: 'Pacific NW', score: 88, status: 'green' },
+  { name: 'No. California', score: 91, status: 'green' },
+  { name: 'Mountain', score: 84, status: 'green' },
+  { name: 'Upper MW', score: 79, status: 'green' },
+  { name: 'New England', score: 86, status: 'green' },
+  { name: 'So. California', score: 72, status: 'yellow' },
+  { name: 'Southwest', score: 67, status: 'yellow' },
+  { name: 'Central', score: 82, status: 'green' },
+  { name: 'Great Lakes', score: 85, status: 'green' },
+  { name: 'Mid-Atlantic', score: 90, status: 'green' },
+  { name: 'Hawaii', score: 93, status: 'green' },
+  { name: 'Texas', score: 59, status: 'red' },
+  { name: 'Gulf Coast', score: 76, status: 'green' },
+  { name: 'Southeast', score: 81, status: 'green' },
+  { name: 'Carolinas', score: 87, status: 'green' },
+];
+
+const regionGrid = document.getElementById('region-grid');
+regions.forEach(r => {
+  const cell = document.createElement('div');
+  cell.className = 'region-cell ' + r.status;
+  cell.innerHTML = `<span class="region-name">${r.name}</span><span class="region-score">${r.score}</span>`;
+  regionGrid.appendChild(cell);
+});
+
+const branches = [
+  { name: 'Downtown Dallas #1247', city: 'Dallas, TX', score: 42, pressure: 8.7, crossSell: 4.2, sentiment: 31, flag: 'red', anomaly: 'Cross-sell ratio 2.3× above regional avg — pattern matches pre-2016 behavior' },
+  { name: 'Galleria Houston #0934', city: 'Houston, TX', score: 51, pressure: 7.9, crossSell: 3.8, sentiment: 38, flag: 'red', anomaly: 'Employee sentiment dropped 24pts in 60 days — 3 complaints filed' },
+  { name: 'La Jolla #1562', city: 'San Diego, CA', score: 64, pressure: 6.2, crossSell: 3.1, sentiment: 52, flag: 'yellow', anomaly: 'Sales pressure index rising — now 1.8× above peer branches' },
+  { name: 'Scottsdale #0871', city: 'Scottsdale, AZ', score: 71, pressure: 5.1, crossSell: 2.4, sentiment: 61, flag: 'yellow', anomaly: '' },
+  { name: 'Market St #0102', city: 'San Francisco, CA', score: 89, pressure: 2.1, crossSell: 1.3, sentiment: 82, flag: 'green', anomaly: '' },
+  { name: 'Michigan Ave #0445', city: 'Chicago, IL', score: 91, pressure: 1.8, crossSell: 1.1, sentiment: 86, flag: 'green', anomaly: '' },
+  { name: 'Peachtree #0667', city: 'Atlanta, GA', score: 85, pressure: 2.4, crossSell: 1.4, sentiment: 79, flag: 'green', anomaly: '' },
+  { name: 'Beacon Hill #0223', city: 'Boston, MA', score: 92, pressure: 1.5, crossSell: 1.0, sentiment: 88, flag: 'green', anomaly: '' },
+  { name: 'Cherry Creek #0778', city: 'Denver, CO', score: 87, pressure: 2.0, crossSell: 1.2, sentiment: 81, flag: 'green', anomaly: '' },
+  { name: 'Pike Place #0334', city: 'Seattle, WA', score: 90, pressure: 1.7, crossSell: 1.1, sentiment: 85, flag: 'green', anomaly: '' },
+];
+
+const tbody = document.getElementById('branch-table-body');
+branches.forEach(b => {
+  const badgeClass = b.score >= 80 ? 'good' : b.score >= 60 ? 'warning' : 'danger';
+  const pressureColor = b.pressure > 6 ? 'var(--color-danger)' : b.pressure > 4 ? 'var(--color-warning)' : 'var(--text-secondary)';
+  const crossColor = b.crossSell > 3 ? 'var(--color-danger)' : b.crossSell > 2 ? 'var(--color-warning)' : 'var(--text-secondary)';
+  const sentimentColor = b.sentiment < 40 ? 'var(--color-danger)' : b.sentiment < 60 ? 'var(--color-warning)' : 'var(--color-success)';
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="branch-name">${b.name}</td>
+    <td>${b.city}</td>
+    <td><span class="health-badge ${badgeClass}">${b.score}</span></td>
+    <td style="color: ${pressureColor}; font-weight: 600;">${b.pressure}/10</td>
+    <td style="color: ${crossColor}; font-weight: 600;">${b.crossSell}×</td>
+    <td style="color: ${sentimentColor}; font-weight: 600;">${b.sentiment}%</td>
+    <td><div class="flag-cell"><span class="flag-dot ${b.flag}"></span>${b.flag === 'red' ? 'Flagged' : b.flag === 'yellow' ? 'Watch' : 'Clear'}</div></td>
+    <td>${b.anomaly ? '<span class="anomaly-note">' + b.anomaly + '</span>' : '<span style="color: var(--text-tertiary);">—</span>'}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Branch Trend Chart
+let branchChartInit = false;
+function initBranchCharts() {
+  if (branchChartInit) return;
+  branchChartInit = true;
+
+  const ctx = document.getElementById('branchTrendChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Flagged', 'Week 2', 'Week 4', 'Week 6', 'Week 8', 'Week 10', 'Week 12'],
+      datasets: [
+        {
+          label: 'Dallas #1247',
+          data: [42, 48, 55, 63, 71, 78, 84],
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239,68,68,0.08)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#EF4444',
+        },
+        {
+          label: 'Houston #0934',
+          data: [51, 54, 60, 68, 74, 80, 86],
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245,158,11,0.06)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#F59E0B',
+        },
+        {
+          label: 'La Jolla #1562',
+          data: [64, 67, 72, 76, 80, 83, 88],
+          borderColor: '#22C55E',
+          backgroundColor: 'rgba(34,197,94,0.06)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#22C55E',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#A0A0AC',
+            font: { family: 'Inter', size: 11 },
+            padding: 16,
+            usePointStyle: true,
+            pointStyleWidth: 8,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#22222A',
+          titleColor: '#F2F2F4',
+          bodyColor: '#A0A0AC',
+          borderColor: '#2A2A34',
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'Inter', weight: '600' },
+          bodyFont: { family: 'Inter' },
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '/100'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6B6B78', font: { family: 'Inter', size: 11 } }
+        },
+        y: {
+          min: 30,
+          max: 100,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#6B6B78',
+            font: { family: 'Inter', size: 11 },
+            callback: v => v + '/100'
+          }
+        }
+      },
+      animation: {
+        duration: 1200,
+        easing: 'easeOutQuart'
+      }
+    }
+  });
+}
+
+// ========== TAB 3: TRUST DASHBOARD ==========
+let trustChartsInit = false;
+function initTrustCharts() {
+  if (trustChartsInit) return;
+  trustChartsInit = true;
+
+  // Customer Satisfaction Trend
+  const satCtx = document.getElementById('satisfactionChart').getContext('2d');
+  const satGradient = satCtx.createLinearGradient(0, 0, 0, 240);
+  satGradient.addColorStop(0, 'rgba(205, 19, 9, 0.15)');
+  satGradient.addColorStop(1, 'rgba(205, 19, 9, 0)');
+
+  new Chart(satCtx, {
+    type: 'line',
+    data: {
+      labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+      datasets: [{
+        label: 'CSAT Score',
+        data: [62, 64, 65, 67, 69, 71, 72, 73, 74, 76, 77, 79],
+        borderColor: '#CD1309',
+        backgroundColor: satGradient,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: '#CD1309',
+        pointBorderColor: '#0D0D0F',
+        pointBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#22222A',
+          titleColor: '#F2F2F4',
+          bodyColor: '#A0A0AC',
+          borderColor: '#2A2A34',
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'Inter', weight: '600' },
+          bodyFont: { family: 'Inter' },
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6B6B78', font: { family: 'Inter', size: 11 } }
+        },
+        y: {
+          min: 55,
+          max: 85,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6B6B78', font: { family: 'Inter', size: 11 } }
+        }
+      },
+      animation: { duration: 1200, easing: 'easeOutQuart' }
+    }
+  });
+
+  // J.D. Power Comparison
+  const jdCtx = document.getElementById('jdPowerChart').getContext('2d');
+  new Chart(jdCtx, {
+    type: 'bar',
+    data: {
+      labels: ['2022', '2023', '2024', '2025', '2026 (Proj)'],
+      datasets: [
+        {
+          label: 'Wells Fargo',
+          data: [782, 798, 821, 839, 856],
+          backgroundColor: '#CD1309',
+          borderRadius: 4,
+          borderSkipped: false,
+          barPercentage: 0.6,
+          categoryPercentage: 0.7,
+        },
+        {
+          label: 'Industry Avg',
+          data: [834, 838, 842, 847, 852],
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          borderRadius: 4,
+          borderSkipped: false,
+          barPercentage: 0.6,
+          categoryPercentage: 0.7,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#A0A0AC',
+            font: { family: 'Inter', size: 11 },
+            padding: 16,
+            usePointStyle: true,
+            pointStyleWidth: 8,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#22222A',
+          titleColor: '#F2F2F4',
+          bodyColor: '#A0A0AC',
+          borderColor: '#2A2A34',
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'Inter', weight: '600' },
+          bodyFont: { family: 'Inter' },
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6B6B78', font: { family: 'Inter', size: 11 } }
+        },
+        y: {
+          min: 760,
+          max: 870,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6B6B78', font: { family: 'Inter', size: 11 } }
+        }
+      },
+      animation: { duration: 1000, easing: 'easeOutQuart' }
+    }
+  });
+}
+
+// ========== LIVE FEED ==========
+const feedItems = [
+  { text: '<strong>Unauthorized charge</strong> — Disputed $847 on debit card', time: '4 min ago', resolution: 'Resolved in 4 hours' },
+  { text: '<strong>Account access issue</strong> — Customer locked out after travel', time: '12 min ago', resolution: 'Resolved in 2 hours' },
+  { text: '<strong>Wire transfer dispute</strong> — Duplicate $3,200 charge flagged', time: '23 min ago', resolution: 'Resolved in 6 hours' },
+  { text: '<strong>Fee reversal request</strong> — Overdraft fee during system outage', time: '31 min ago', resolution: 'Resolved in 1 hour' },
+  { text: '<strong>Identity verification</strong> — Suspicious login from new device', time: '45 min ago', resolution: 'Resolved in 3 hours' },
+  { text: '<strong>Zelle dispute</strong> — Payment sent to wrong recipient', time: '1h ago', resolution: 'Resolved in 8 hours' },
+];
+
+function populateFeed() {
+  const feed = document.getElementById('live-feed');
+  feedItems.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'feed-item';
+    div.style.animationDelay = (i * 0.08) + 's';
+    div.innerHTML = `
+      <span class="feed-dot"></span>
+      <span class="feed-text">${item.text} — <em style="color: var(--color-success);">${item.resolution}</em></span>
+      <span class="feed-time">${item.time}</span>
+    `;
+    feed.appendChild(div);
+  });
+}
+populateFeed();
+
+// ========== INITIALIZE DEFAULT VISIBLE CHARTS ==========
+// No charts on first tab — they init when switching
+
+// ========== SUBTLE AMBIENT ANIMATION ==========
+// Increment the scanned transactions counter periodically
+setInterval(() => {
+  const el = document.querySelector('[data-counter]');
+  if (el) {
+    const current = parseInt(el.textContent.replace(/,/g, ''));
+    el.textContent = (current + Math.floor(Math.random() * 12) + 3).toLocaleString();
+  }
+}, 2000);
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
